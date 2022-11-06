@@ -1,10 +1,15 @@
 import React, { useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import img from '../../assets/images/login/login.svg';
 import { AuthContext } from '../../contexts/AuthProvider/AuthProvider';
+import SocialLogin from '../Shared/SocialLogin/SocialLogin';
 
 const Login = () => {
     const { login } = useContext(AuthContext);
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleLogIn = (event) => {
         event.preventDefault();
@@ -16,6 +21,27 @@ const Login = () => {
             .then(result => {
                 const user = result.user;
                 console.log(user);
+
+                const currentUser = {
+                    email: user.email
+                }
+                console.log(currentUser);
+
+                // get jwt token
+                fetch('https://genius-car-server-five-rho.vercel.app/jwt', {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify(currentUser)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log(data);
+                        // local storage is the easiest but not the best place to store token
+                        localStorage.setItem('genius-token', data.token)
+                        navigate(from, { replace: true })
+                    })
             })
             .catch(err => console.log(err))
     }
@@ -49,6 +75,7 @@ const Login = () => {
                         </div>
                     </form>
                     <p className='text-center'>New to Genius Car? <Link className='text-white font-bold' to='/signup'>Sign Up</Link></p>
+                    <SocialLogin></SocialLogin>
                 </div>
             </div>
         </div>
